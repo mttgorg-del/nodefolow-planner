@@ -12,6 +12,7 @@ const planner = createPlanner(path.join(__dirname, 'data', 'tasks.json'), [
 ]);
 
 const port = process.env.PORT || 3000;
+const host = process.env.HOST || '0.0.0.0';
 const publicDir = path.join(__dirname, 'public');
 
 const mimeTypes = {
@@ -167,6 +168,6 @@ const server = http.createServer(async (req, res) => {
   serveStaticFile(req, res);
 });
 
-server.listen(port, () => {
-  console.log(`Planner app running at http://localhost:${port}`);
+server.listen(port, host, () => {
+  console.log(`Planner app running at http://${host}:${port}`);
 });

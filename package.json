@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A richer task planner app with a web interface.",
   "main": "app.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node app.js",
     "test": "node --test"

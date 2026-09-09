@@ -2,6 +2,6 @@ services:
   - type: web
     name: nodeflow-planner
     runtime: node
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install --omit=dev
+    startCommand: node app.js
     healthCheckPath: /
