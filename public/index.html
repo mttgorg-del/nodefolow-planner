@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="NodeFlow" />
+    <title>Node Planner Dashboard</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">N</div>
+          <div>
+            <p class="subtitle">Planner</p>
+            <h2>NodeFlow</h2>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Planner sections">
+          <button class="nav-item active" data-view="overview" type="button">Overview</button>
+          <button class="nav-item" data-view="today" type="button">Today</button>
+          <button class="nav-item" data-view="calendar" type="button">Calendar</button>
+          <button class="nav-item" data-view="focus" type="button">Focus</button>
+          <button class="nav-item" data-view="settings" type="button">Settings</button>
+        </nav>
+
+        <div class="mini-card">
+          <p>Progress</p>
+          <div class="ring-wrap">
+            <div class="ring">
+              <span id="ringValue">0%</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Daily dashboard</p>
+            <h1>Today’s plan</h1>
+          </div>
+          <div class="header-actions">
+            <input id="searchInput" type="search" placeholder="Search tasks..." aria-label="Search tasks" />
+            <label class="upload-button" for="backgroundUpload">
+              <span>Upload background</span>
+            </label>
+            <input id="backgroundUpload" type="file" accept="image/*" hidden />
+            <button id="themeToggle" class="theme-toggle" type="button">Dark mode</button>
+            <div class="date-pill" id="todayDate"></div>
+          </div>
+        </header>
+
+        <section class="stats-grid">
+          <article class="stat-card stat-total">
+            <span>Total tasks</span>
+            <strong id="totalCount">0</strong>
+          </article>
+          <article class="stat-card stat-done">
+            <span>Completed</span>
+            <strong id="doneCount">0</strong>
+          </article>
+          <article class="stat-card stat-pending">
+            <span>Pending</span>
+            <strong id="pendingCount">0</strong>
+          </article>
+        </section>
+
+        <section class="composer">
+          <form id="taskForm" class="task-form">
+            <input id="taskInput" type="text" placeholder="Add a task for today..." aria-label="Task title" />
+            <select id="taskPriority" aria-label="Priority">
+              <option value="medium">Medium priority</option>
+              <option value="low">Low priority</option>
+              <option value="high">High priority</option>
+            </select>
+            <select id="taskCategory" aria-label="Category">
+              <option value="general">General</option>
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+              <option value="creative">Creative</option>
+            </select>
+            <input id="taskDueDate" type="date" aria-label="Due date" />
+            <input id="taskReminderDate" type="date" aria-label="Reminder date" />
+            <input id="taskReminderTime" type="time" aria-label="Reminder time" />
+            <select id="taskRepeat" aria-label="Repeat">
+              <option value="none">No repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <textarea id="taskNotes" rows="2" placeholder="Notes"></textarea>
+            <button type="submit">Add task</button>
+          </form>
+        </section>
+
+        <section class="toolbar">
+          <div class="filter-group">
+            <button class="filter active" data-filter="all" type="button">All</button>
+            <button class="filter" data-filter="todo" type="button">Todo</button>
+            <button class="filter" data-filter="done" type="button">Done</button>
+          </div>
+        </section>
+
+        <section id="overviewView" class="view active">
+          <div class="task-board">
+            <ul id="taskList" class="task-list"></ul>
+          </div>
+        </section>
+
+        <section id="calendarView" class="view">
+          <div class="calendar-panel">
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+        </section>
+
+        <section id="focusView" class="view">
+          <div class="task-board">
+            <ul id="focusList" class="task-list"></ul>
+          </div>
+        </section>
+
+        <section id="settingsView" class="view">
+          <div class="settings-panel">
+            <div class="settings-grid">
+              <div class="setting-card">
+                <h3>Appearance</h3>
+                <label class="toggle-row">
+                  <span>Glassmorphism panels</span>
+                  <input id="glassModeToggle" type="checkbox" />
+                </label>
+                <label class="toggle-row">
+                  <span>Blur background</span>
+                  <input id="blurBackgroundToggle" type="checkbox" />
+                </label>
+              </div>
+
+              <div class="setting-card">
+                <h3>Accent color</h3>
+                <label class="color-row">
+                  <span>Planner accent</span>
+                  <input id="accentColorPicker" type="color" value="#7c3aed" />
+                </label>
+              </div>
+
+              <div class="setting-card">
+                <h3>Quick add</h3>
+                <label class="toggle-row">
+                  <span>Floating add task widget</span>
+                  <input id="quickAddToggle" type="checkbox" />
+                </label>
+              </div>
+
+              <div class="setting-card">
+                <h3>Notifications</h3>
+                <label class="toggle-row">
+                  <span>Enable reminder alerts</span>
+                  <input id="notificationToggle" type="checkbox" />
+                </label>
+                <label class="color-row">
+                  <span>Reminder window</span>
+                  <select id="reminderWindowSelect">
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="1440">1 day</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="setting-card">
+                <h3>Background</h3>
+                <button id="clearBackgroundBtn" class="secondary-btn" type="button">Clear uploaded background</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="quickAddWidget" class="quick-add-widget hidden">
+      <form id="quickAddForm" class="quick-add-form">
+        <input id="quickAddInput" type="text" placeholder="Quick add task" aria-label="Quick add task" />
+        <button type="submit">Add</button>
+      </form>
+    </div>
+
+    <template id="taskEditorTemplate">
+      <div class="task-editor">
+        <input class="editor-title" type="text" />
+        <select class="editor-priority">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <select class="editor-category">
+          <option value="general">General</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="creative">Creative</option>
+        </select>
+        <input class="editor-date" type="date" />
+        <input class="editor-reminder-date" type="date" />
+        <input class="editor-reminder-time" type="time" />
+        <select class="editor-repeat">
+          <option value="none">No repeat</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+        <textarea class="editor-notes" rows="2" placeholder="Notes"></textarea>
+        <div class="editor-actions">
+          <button class="save-edit" type="button">Save</button>
+          <button class="cancel-edit" type="button">Cancel</button>
+        </div>
+      </div>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
