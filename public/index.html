@@ -3,226 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#7c3aed" />
+    <meta id="themeColorMeta" name="theme-color" content="#102a43" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="NodeFlow" />
-    <title>Node Planner Dashboard</title>
+    <meta name="apple-mobile-web-app-title" content="Code Atlas" />
+    <title>Code Atlas | Learn by building</title>
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="app-layout">
+    <div class="app-shell">
       <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">N</div>
-          <div>
-            <p class="subtitle">Planner</p>
-            <h2>NodeFlow</h2>
-          </div>
-        </div>
-
-        <nav class="nav" aria-label="Planner sections">
-          <button class="nav-item active" data-view="overview" type="button">Overview</button>
-          <button class="nav-item" data-view="today" type="button">Today</button>
-          <button class="nav-item" data-view="calendar" type="button">Calendar</button>
-          <button class="nav-item" data-view="focus" type="button">Focus</button>
-          <button class="nav-item" data-view="settings" type="button">Settings</button>
+        <a class="brand" href="#top" aria-label="Code Atlas home"><span class="brand-mark">&lt;/&gt;</span><span><strong>Code Atlas</strong><small>Learn by building</small></span></a>
+        <nav class="side-nav" aria-label="Main navigation">
+          <button class="nav-link active" data-target="top" type="button"><span>01</span> Learn</button>
+          <button class="nav-link" data-target="journeyPanel" type="button"><span>02</span> My paths</button>
+          <button class="nav-link" data-target="notesPanel" type="button"><span>03</span> Notes</button>
+          <button class="nav-link" data-target="settingsPanel" type="button"><span>04</span> Settings</button>
         </nav>
-
-        <div class="mini-card">
-          <p>Progress</p>
-          <div class="ring-wrap">
-            <div class="ring">
-              <span id="ringValue">0%</span>
-            </div>
-          </div>
-        </div>
+        <div class="side-footer"><span class="status-dot"></span> Your progress is saved on this device</div>
       </aside>
-
-      <main class="main-panel">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow">Daily dashboard</p>
-            <h1>Today’s plan</h1>
-          </div>
-          <div class="header-actions">
-            <input id="searchInput" type="search" placeholder="Search tasks..." aria-label="Search tasks" />
-            <label class="upload-button" for="backgroundUpload">
-              <span>Upload background</span>
-            </label>
-            <input id="backgroundUpload" type="file" accept="image/*" hidden />
-            <button id="themeToggle" class="theme-toggle" type="button">Dark mode</button>
-            <div class="date-pill" id="todayDate"></div>
-          </div>
-        </header>
-
-        <section class="stats-grid">
-          <article class="stat-card stat-total">
-            <span>Total tasks</span>
-            <strong id="totalCount">0</strong>
-          </article>
-          <article class="stat-card stat-done">
-            <span>Completed</span>
-            <strong id="doneCount">0</strong>
-          </article>
-          <article class="stat-card stat-pending">
-            <span>Pending</span>
-            <strong id="pendingCount">0</strong>
-          </article>
-        </section>
-
-        <section class="composer">
-          <form id="taskForm" class="task-form">
-            <input id="taskInput" type="text" placeholder="Add a task for today..." aria-label="Task title" />
-            <select id="taskPriority" aria-label="Priority">
-              <option value="medium">Medium priority</option>
-              <option value="low">Low priority</option>
-              <option value="high">High priority</option>
-            </select>
-            <select id="taskCategory" aria-label="Category">
-              <option value="general">General</option>
-              <option value="work">Work</option>
-              <option value="personal">Personal</option>
-              <option value="creative">Creative</option>
-            </select>
-            <input id="taskDueDate" type="date" aria-label="Due date" />
-            <input id="taskReminderDate" type="date" aria-label="Reminder date" />
-            <input id="taskReminderTime" type="time" aria-label="Reminder time" />
-            <select id="taskRepeat" aria-label="Repeat">
-              <option value="none">No repeat</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-            <textarea id="taskNotes" rows="2" placeholder="Notes"></textarea>
-            <button type="submit">Add task</button>
-          </form>
-        </section>
-
-        <section class="toolbar">
-          <div class="filter-group">
-            <button class="filter active" data-filter="all" type="button">All</button>
-            <button class="filter" data-filter="todo" type="button">Todo</button>
-            <button class="filter" data-filter="done" type="button">Done</button>
-          </div>
-        </section>
-
-        <section id="overviewView" class="view active">
-          <div class="task-board">
-            <ul id="taskList" class="task-list"></ul>
-          </div>
-        </section>
-
-        <section id="calendarView" class="view">
-          <div class="calendar-panel">
-            <div id="calendarGrid" class="calendar-grid"></div>
-          </div>
-        </section>
-
-        <section id="focusView" class="view">
-          <div class="task-board">
-            <ul id="focusList" class="task-list"></ul>
-          </div>
-        </section>
-
-        <section id="settingsView" class="view">
-          <div class="settings-panel">
-            <div class="settings-grid">
-              <div class="setting-card">
-                <h3>Appearance</h3>
-                <label class="toggle-row">
-                  <span>Glassmorphism panels</span>
-                  <input id="glassModeToggle" type="checkbox" />
-                </label>
-                <label class="toggle-row">
-                  <span>Blur background</span>
-                  <input id="blurBackgroundToggle" type="checkbox" />
-                </label>
-              </div>
-
-              <div class="setting-card">
-                <h3>Accent color</h3>
-                <label class="color-row">
-                  <span>Planner accent</span>
-                  <input id="accentColorPicker" type="color" value="#7c3aed" />
-                </label>
-              </div>
-
-              <div class="setting-card">
-                <h3>Quick add</h3>
-                <label class="toggle-row">
-                  <span>Floating add task widget</span>
-                  <input id="quickAddToggle" type="checkbox" />
-                </label>
-              </div>
-
-              <div class="setting-card">
-                <h3>Notifications</h3>
-                <label class="toggle-row">
-                  <span>Enable reminder alerts</span>
-                  <input id="notificationToggle" type="checkbox" />
-                </label>
-                <label class="color-row">
-                  <span>Reminder window</span>
-                  <select id="reminderWindowSelect">
-                    <option value="15">15 min</option>
-                    <option value="30">30 min</option>
-                    <option value="60">1 hour</option>
-                    <option value="1440">1 day</option>
-                  </select>
-                </label>
-              </div>
-
-              <div class="setting-card">
-                <h3>Background</h3>
-                <button id="clearBackgroundBtn" class="secondary-btn" type="button">Clear uploaded background</button>
-              </div>
-            </div>
-          </div>
-        </section>
+      <main id="top" class="main-content">
+        <header class="topbar"><div><p class="kicker">Tuesday, September 9</p><h1>Make something <em>real.</em></h1></div><div class="top-actions"><button id="themeToggle" class="quiet-button" type="button">Dark mode</button><button id="resetProgress" class="quiet-button" type="button">Reset</button></div></header>
+        <section class="welcome-panel"><div><p class="kicker warm">Your next expedition</p><h2>Build a tiny<br /><strong>Python game</strong></h2><p>Learn variables, loops, and decisions by making something you can play.</p><button class="primary-button" data-lesson="python-1" type="button">Continue lesson <span>-&gt;</span></button></div><div class="orbit-art" aria-hidden="true"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><span class="planet">{ }</span><span class="star star-one">+</span><span class="star star-two">*</span></div></section>
+        <section class="progress-row" aria-label="Your progress"><div><span class="progress-label">Journey progress</span><strong id="progressPercent">0%</strong></div><div class="progress-track"><span id="progressBar"></span></div><small id="progressText">0 of 12 lessons complete</small></section>
+        <section class="learner-stats" aria-label="Learner overview"><article><span id="completedStat" class="stat-symbol">0</span><div><strong>Lessons complete</strong><small>Keep moving forward</small></div></article><article><span id="pointsStat" class="stat-symbol teal">0</span><div><strong>Practice points</strong><small>20 points per mission</small></div></article><article><span id="pathsStat" class="stat-symbol gold">0</span><div><strong>Paths explored</strong><small>Based on your progress</small></div></article></section>
+        <section class="method-strip" aria-label="How a level works"><div><p class="kicker">The Code Atlas method</p><h2>Learn it. Test it. <em>Use it.</em></h2></div><ol><li><span>01</span> Learn</li><li><span>02</span> Predict</li><li><span>03</span> Build</li><li><span>04</span> Explain</li></ol></section>
+        <section id="journeyPanel" class="journey-panel" aria-label="Your learning journey"><div class="section-heading journey-heading"><div><p class="kicker">Your trail</p><h2>Journey map</h2></div><span id="journeyStatus" class="journey-status"></span></div><div id="journeyTrack" class="journey-track"></div></section>
+        <section class="section-heading"><div><p class="kicker">Choose your route</p><h2>Learning paths</h2></div><button id="viewAll" class="text-button" type="button">View all <span>-&gt;</span></button></section>
+        <div id="pathFilters" class="path-filters" role="tablist" aria-label="Learning path filters"></div>
+        <section id="lessonGrid" class="lesson-grid" aria-live="polite"></section>
+        <section id="notesPanel" class="notes-panel"><div><p class="kicker">Your notebook</p><h2>Notes are coming with you.</h2><p>Keep observations, bugs, and ideas beside the concepts you are learning.</p></div><span class="notes-mark">//</span></section>
+        <section id="settingsPanel" class="settings-panel"><div class="section-heading settings-heading"><div><p class="kicker">Workspace</p><h2>Settings</h2></div></div><div class="settings-list"><div class="setting-row"><div><strong>Appearance</strong><small>Switch between a light and dark study space.</small></div><button id="settingsThemeToggle" class="setting-button" type="button">Dark mode</button></div><div class="setting-row"><div><strong>Saved progress</strong><small id="settingsProgressText">Your progress is stored on this device.</small></div><button id="settingsReset" class="setting-button danger" type="button">Reset progress</button></div><div class="setting-row"><div><strong>Install Code Atlas</strong><small>Use your browser menu to add this app to your phone home screen.</small></div><span class="setting-value">PWA ready</span></div></div></section>
+        <section class="tip-panel"><span class="tip-icon">!</span><div><p class="kicker">Field note</p><p>Small steps beat perfect plans. Finish one lesson, then change the code and see what happens.</p></div><button class="close-tip" type="button" aria-label="Dismiss field note">x</button></section>
       </main>
     </div>
-
-    <div id="quickAddWidget" class="quick-add-widget hidden">
-      <form id="quickAddForm" class="quick-add-form">
-        <input id="quickAddInput" type="text" placeholder="Quick add task" aria-label="Quick add task" />
-        <button type="submit">Add</button>
-      </form>
-    </div>
-
-    <template id="taskEditorTemplate">
-      <div class="task-editor">
-        <input class="editor-title" type="text" />
-        <select class="editor-priority">
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-        <select class="editor-category">
-          <option value="general">General</option>
-          <option value="work">Work</option>
-          <option value="personal">Personal</option>
-          <option value="creative">Creative</option>
-        </select>
-        <input class="editor-date" type="date" />
-        <input class="editor-reminder-date" type="date" />
-        <input class="editor-reminder-time" type="time" />
-        <select class="editor-repeat">
-          <option value="none">No repeat</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-        <textarea class="editor-notes" rows="2" placeholder="Notes"></textarea>
-        <div class="editor-actions">
-          <button class="save-edit" type="button">Save</button>
-          <button class="cancel-edit" type="button">Cancel</button>
-        </div>
-      </div>
-    </template>
-
+    <dialog id="lessonDialog" class="lesson-dialog"><button id="closeDialog" class="dialog-close" type="button" aria-label="Close lesson">x</button><p id="dialogKicker" class="kicker warm"></p><h2 id="dialogTitle"></h2><p id="dialogDescription"></p><section class="lesson-teach"><div class="teach-step"><span>1</span><div><strong>Learn</strong><p id="teachConcept"></p></div></div><div class="teach-step"><span>2</span><div><strong>Predict</strong><p id="teachPredict"></p></div></div><div class="teach-step"><span>3</span><div><strong>Build</strong><p id="teachBuild"></p></div></div></section><div class="code-window"><div class="window-bar"><span></span><span></span><span></span><small id="dialogFile">lesson.py</small></div><pre id="dialogCode"></pre></div><section id="playground" class="playground" hidden><div class="task-label"><span>Try it live</span><span>JavaScript sandbox</span></div><textarea id="codeEditor" rows="8" spellcheck="false" aria-label="JavaScript code editor"></textarea><div class="playground-actions"><button id="runCode" class="primary-button" type="button">Run code <span>&gt;</span></button><button id="runTests" class="test-button" type="button">Run tests</button><span>Output</span></div><pre id="codeOutput" class="code-output">Run your code to see what happens.</pre><iframe id="playgroundFrame" sandbox="allow-scripts" title="JavaScript code sandbox"></iframe></section><section class="task-box"><div class="task-label"><span>Mission</span><a id="taskSource" target="_blank" rel="noreferrer"></a></div><h3 id="taskTitle"></h3><p id="taskPrompt"></p><div class="obstacle"><strong>Obstacle</strong><span id="taskObstacle"></span></div><textarea id="taskAnswer" rows="4" placeholder="Write your answer here..." aria-label="Your answer"></textarea><div class="task-controls"><button id="showHint" class="text-button" type="button">Need a hint?</button><button id="checkAnswer" class="primary-button" type="button">Check answer <span>-&gt;</span></button></div><p id="taskFeedback" class="task-feedback" role="status"></p><p id="taskHint" class="task-hint"></p></section><div class="lesson-actions"><button id="completeLesson" class="primary-button" type="button">Mark lesson complete <span>-&gt;</span></button></div></dialog>
     <script src="/app.js"></script>
   </body>
 </html>

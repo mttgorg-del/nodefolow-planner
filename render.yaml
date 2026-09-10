@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nodeflow-planner
+    name: code-atlas
     runtime: node
     buildCommand: npm install --omit=dev
     startCommand: node app.js

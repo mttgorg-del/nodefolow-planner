@@ -1,11 +1,11 @@
 {
-  "name": "NodeFlow Planner",
-  "short_name": "NodeFlow",
-  "description": "A purple-themed task planner you can install on your phone.",
+  "name": "Code Atlas Learning App",
+  "short_name": "Code Atlas",
+  "description": "A phone-friendly app for learning Python, JavaScript, and Linux.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#120a1d",
-  "theme_color": "#7c3aed",
+  "background_color": "#f4f7f5",
+  "theme_color": "#102a43",
   "orientation": "portrait",
   "icons": [
     {

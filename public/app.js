@@ -1,639 +1,106 @@
-const taskForm = document.getElementById('taskForm');
-const taskInput = document.getElementById('taskInput');
-const taskPriority = document.getElementById('taskPriority');
-const taskCategory = document.getElementById('taskCategory');
-const taskDueDate = document.getElementById('taskDueDate');
-const taskReminderDate = document.getElementById('taskReminderDate');
-const taskReminderTime = document.getElementById('taskReminderTime');
-const taskRepeat = document.getElementById('taskRepeat');
-const taskNotes = document.getElementById('taskNotes');
-const taskList = document.getElementById('taskList');
-const focusList = document.getElementById('focusList');
-const calendarGrid = document.getElementById('calendarGrid');
-const totalCount = document.getElementById('totalCount');
-const doneCount = document.getElementById('doneCount');
-const pendingCount = document.getElementById('pendingCount');
-const ringValue = document.getElementById('ringValue');
-const todayDate = document.getElementById('todayDate');
-const searchInput = document.getElementById('searchInput');
-const themeToggle = document.getElementById('themeToggle');
-const backgroundUpload = document.getElementById('backgroundUpload');
-const glassModeToggle = document.getElementById('glassModeToggle');
-const blurBackgroundToggle = document.getElementById('blurBackgroundToggle');
-const accentColorPicker = document.getElementById('accentColorPicker');
-const notificationToggle = document.getElementById('notificationToggle');
-const reminderWindowSelect = document.getElementById('reminderWindowSelect');
-const quickAddToggle = document.getElementById('quickAddToggle');
-const clearBackgroundBtn = document.getElementById('clearBackgroundBtn');
-const quickAddWidget = document.getElementById('quickAddWidget');
-const quickAddForm = document.getElementById('quickAddForm');
-const quickAddInput = document.getElementById('quickAddInput');
-const filterButtons = [...document.querySelectorAll('.filter')];
-const navButtons = [...document.querySelectorAll('.nav-item')];
-
-let state = {
-  tasks: [],
-  activeFilter: 'all',
-  activeView: 'overview',
-  search: '',
-  darkMode: localStorage.getItem('node-planner-theme') === 'dark',
-  glassMode: localStorage.getItem('node-planner-glass') === 'true',
-  blurBackground: localStorage.getItem('node-planner-blur') === 'true',
-  accentColor: localStorage.getItem('node-planner-accent') || '#7c3aed',
-  notificationEnabled: localStorage.getItem('node-planner-notifications') === 'true',
-  reminderWindowMinutes: Number(localStorage.getItem('node-planner-reminder-window') || 15),
-  quickAddEnabled: localStorage.getItem('node-planner-quick-add') === 'true',
+const paths = [{ id: 'all', label: 'All paths' }, { id: 'python', label: 'Python' }, { id: 'javascript', label: 'JavaScript' }, { id: 'linux', label: 'Linux' }];
+const lessons = [
+  { id: 'python-1', path: 'python', level: 'Beginner', title: 'Your first Python game', description: 'Use variables and input to make a tiny guessing game.', duration: '12 min', icon: 'PY', file: 'game.py', source: 'Python tutorial', code: 'secret = 7\nguess = int(input("Pick a number: "))\n\nif guess == secret:\n    print("You got it!")', task: 'Repair the input bug', prompt: 'The player input arrives as text. Write the line that converts it to an integer, then compare guess with secret.', obstacle: 'If you compare a string to an integer, a correct-looking guess will still fail.', hint: 'Use int(...) around input(...).', checks: [/int\s*\(\s*input/i, /guess\s*==\s*secret/i], solution: 'Use int(input(...)) and an if comparison with guess == secret.' },
+  { id: 'python-2', path: 'python', level: 'Beginner', title: 'Loops that do the work', description: 'Repeat a task without repeating yourself.', duration: '15 min', icon: 'PY', file: 'tries.py', source: 'Python control flow', code: 'for attempt in range(3):\n    print("Try", attempt + 1)', task: 'Limit the attempts', prompt: 'Write a loop that prints Try 1, Try 2, and Try 3. Do not write three print statements.', obstacle: 'range(3) stops before 3, so the loop variable needs a small adjustment for human-friendly numbering.', hint: 'Use range(3), then add 1 to the loop variable.', checks: [/for\s+\w+\s+in\s+range\s*\(\s*3\s*\)/i, /print\s*\([^\n]*\+\s*1/i], solution: 'Use for attempt in range(3) and print attempt + 1.' },
+  { id: 'javascript-1', path: 'javascript', level: 'Beginner', title: 'Make a button think', description: 'Connect an event to a function and change a page.', duration: '10 min', icon: 'JS', file: 'script.js', source: 'MDN events', code: 'const button = document.querySelector("button");\n\nbutton.addEventListener("click", () => {\n  button.textContent = "Clicked!";\n});', task: 'Wire the click event', prompt: 'Write the JavaScript that listens for a button click and changes its text to Clicked!.', obstacle: 'Do not use inline onclick HTML. Keeping behavior in addEventListener scales to many buttons.', hint: 'Select the button, then call addEventListener with click and a function.', checks: [/querySelector\s*\(\s*["']button/i, /addEventListener\s*\(\s*["']click/i, /textContent\s*=/i], solution: 'Use querySelector, addEventListener("click", ...), and textContent.' },
+  { id: 'javascript-2', path: 'javascript', level: 'Advanced', title: 'Async in the real world', description: 'Fetch data and handle the wait like a pro.', duration: '18 min', icon: 'JS', file: 'data.js', source: 'MDN functions', code: 'const response = await fetch("/api/data");\nconst data = await response.json();\nconsole.log(data);', task: 'Handle a failed request', prompt: 'Write an async function that fetches /api/data, parses JSON, and catches a network error.', obstacle: 'The network is outside your control. A robust app must handle rejected promises instead of leaving users with a blank screen.', hint: 'Put await fetch and response.json inside try, then use catch.', checks: [/async\s+function|async\s*\(/i, /await\s+fetch/i, /response\.json\s*\(/i, /catch/i], solution: 'Use an async function with try/catch around await fetch and response.json.' },
+  { id: 'linux-1', path: 'linux', level: 'Beginner', title: 'Find your way around Linux', description: 'Navigate files and understand the command line.', duration: '14 min', icon: '$_', file: 'terminal', source: 'find(1) manual', code: 'pwd\nls -la\ncd projects\nmkdir my-app', task: 'Find every log file', prompt: 'Write a safe command that searches the current directory and its subdirectories for regular files ending in .log.', obstacle: 'Quote wildcard patterns so the shell does not expand them before find receives them.', hint: 'Start with find ., then use -type f and -name.', checks: [/find\s+\./i, /-type\s+f/i, /-name\s+["']?[*][.]log/i], solution: "find . -type f -name '*.log'" },
+  { id: 'linux-2', path: 'linux', level: 'Advanced', title: 'Processes and pipes', description: 'Chain simple tools into powerful workflows.', duration: '20 min', icon: '$_', file: 'terminal', source: 'find(1) manual', code: 'find . -type f -name "*.log" -print0 | xargs -0 grep -n "ERROR"', task: 'Search safely through logs', prompt: 'Write a pipeline that finds .log files and searches them for ERROR, including filenames with spaces.', obstacle: 'Newline-delimited output can break on unusual filenames. Use NUL delimiters between find and xargs.', hint: 'Pair find -print0 with xargs -0.', checks: [/find\s+\./i, /-print0/i, /xargs\s+-0/i, /grep\s+-n/i], solution: 'Use find ... -print0 | xargs -0 grep -n "ERROR".' },
+  { id: 'python-3', path: 'python', level: 'Builder', title: 'Package logic into functions', description: 'Give a repeated idea a name, inputs, and a return value.', duration: '18 min', icon: 'PY', file: 'greetings.py', source: 'Python control flow', code: 'def greet(name):\n    return f"Hello, {name}!"\n\nprint(greet("Ada"))', task: 'Create a reusable greeting', prompt: 'Write greet(name) so it returns a greeting instead of printing from inside the function.', obstacle: 'print shows a value once; return hands a value back so other code can use it.', hint: 'Start with def greet(name): and return a formatted string.', checks: [/def\s+greet\s*\(\s*name\s*\)/i, /return/i], solution: 'Define greet(name) and return the formatted greeting.' },
+  { id: 'python-4', path: 'python', level: 'Builder', title: 'Work with lists', description: 'Store a collection, change it, and inspect its size.', duration: '16 min', icon: 'PY', file: 'backlog.py', source: 'Python data structures', code: 'tasks = ["learn", "build"]\ntasks.append("ship")\nprint(len(tasks))', task: 'Grow a tiny backlog', prompt: 'Add ship to the list and print the number of tasks without hard-coding the answer.', obstacle: 'A list can change, so counting manually becomes wrong as soon as another item is added.', hint: 'Use append to add and len to count.', checks: [/\.append\s*\(/i, /len\s*\(/i], solution: 'Use tasks.append("ship") and print(len(tasks)).' },
+  { id: 'javascript-3', path: 'javascript', level: 'Beginner', title: 'Write your first helper', description: 'Turn repeated behavior into a small function you can call.', duration: '13 min', icon: 'JS', file: 'helpers.js', source: 'MDN functions', code: 'function double(number) {\n  return number * 2;\n}\n\nconsole.log(double(4));', task: 'Build a reusable helper', prompt: 'Write a function double(number) that returns twice the number, then call it with 4.', obstacle: 'A function does nothing until it is called, and return is different from console.log.', hint: 'Use return number * 2, then write double(4).', checks: [/function\s+double\s*\(/i, /return\s+number\s*\*\s*2/i, /double\s*\(\s*4\s*\)/i], solution: 'Define double(number), return number * 2, and call double(4).' },
+  { id: 'javascript-4', path: 'javascript', level: 'Builder', title: 'Validate a form', description: 'Stop a bad submission and explain what the user should fix.', duration: '17 min', icon: 'JS', file: 'form.js', source: 'MDN events', code: 'form.addEventListener("submit", (event) => {\n  if (name.value === "") {\n    event.preventDefault();\n    message.textContent = "Name is required";\n  }\n});', task: 'Protect the submit action', prompt: 'Write a submit listener that prevents the default action when the name field is empty.', obstacle: 'The browser submits forms by default. Your handler must prevent it only when validation fails.', hint: 'Listen for submit, check value === "", then call event.preventDefault().', checks: [/addEventListener\s*\(\s*["']submit/i, /preventDefault\s*\(/i, /value\s*===?\s*["']["']/i], solution: 'Check the empty value in a submit listener and call preventDefault().' },
+  { id: 'linux-3', path: 'linux', level: 'Beginner', title: 'Understand permissions', description: 'Make a script executable without changing everyone’s access.', duration: '12 min', icon: '$_', file: 'terminal', source: 'chmod(1) manual', code: 'chmod u+x deploy.sh\n./deploy.sh', task: 'Run a local script', prompt: 'Write the command that gives only the file owner execute permission on deploy.sh.', obstacle: 'Permissions are three separate audiences: user, group, and others. Avoid opening access wider than needed.', hint: 'Use chmod with u+x.', checks: [/chmod/i, /u\s*\+\s*x/i, /deploy\.sh/i], solution: 'Use chmod u+x deploy.sh.' },
+  { id: 'linux-4', path: 'linux', level: 'Builder', title: 'Search a codebase', description: 'Find TODO comments in JavaScript files without reading every file.', duration: '15 min', icon: '$_', file: 'terminal', source: 'grep(1) manual', code: 'grep -R "TODO" . --include="*.js"', task: 'Find unfinished JavaScript', prompt: 'Write a recursive grep command that searches only .js files for TODO.', obstacle: 'A broad recursive search can include generated files and dependencies. Narrow the file pattern.', hint: 'Use grep -R with --include="*.js".', checks: [/grep\s+-R/i, /TODO/i, /--include\s*=?\s*["']?[*][.]js/i], solution: 'Use grep -R "TODO" . --include="*.js".' },
+];
+const teaching = {
+  'python-1': { concept: 'input() returns text. int(...) converts that text into a number so Python can compare it with 7.', predict: 'What type of value would input("7") return before conversion: text or a number?', build: 'Repair the two lines in the mission, then test your thinking by explaining why the conversion matters.' },
+  'python-2': { concept: 'for repeats a block once per item. range(3) produces 0, 1, and 2; add 1 when people should see 1, 2, and 3.', predict: 'Before running it, write the three numbers you expect range(3) to produce.', build: 'Write one loop and inspect the output. The goal is to control repetition, not copy and paste.' },
+  'javascript-1': { concept: 'An event is a browser signal. addEventListener("click", handler) registers code to run when the user clicks.', predict: 'Which part should run later, only after the click: the listener setup or the handler function?', build: 'Connect the button to a handler and change textContent. Keep JavaScript separate from HTML.' },
+  'javascript-2': { concept: 'Network calls finish later. async/await makes that wait readable, while try/catch gives the user a recovery path when it fails.', predict: 'What should happen if fetch rejects: should the app silently stop or enter catch?', build: 'Write the smallest async function that fetches, parses, and reports failure.' },
+  'linux-1': { concept: 'find starts at a path, tests each entry, and can filter by type and name. The shell expands wildcards before a command unless you quote them.', predict: 'Which tool should interpret *.log: the shell or find?', build: 'Compose the command from three pieces: starting path, regular-file test, and quoted name pattern.' },
+  'linux-2': { concept: 'A pipe sends one command’s output to the next. -print0 and xargs -0 use NUL separators so spaces and newlines in filenames remain safe.', predict: 'Why is a newline a risky filename separator?', build: 'Build the pipeline left to right. Search only files, preserve filenames, then grep for ERROR.' },
 };
-
-function formatDate(dateString) {
-  if (!dateString) return 'No due date';
-  const date = new Date(`${dateString}T00:00:00`);
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
+const sources = {
+  'python-1': 'https://docs.python.org/3/tutorial/introduction.html',
+  'python-2': 'https://docs.python.org/3/tutorial/controlflow.html',
+  'javascript-1': 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Events',
+  'javascript-2': 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Functions',
+  'linux-1': 'https://man7.org/linux/man-pages/man1/find.1.html',
+  'linux-2': 'https://man7.org/linux/man-pages/man1/find.1.html',
+};
+const state = { filter: 'all', completed: JSON.parse(localStorage.getItem('code-atlas-progress') || '[]'), selectedLesson: null };
+const lessonGrid = document.getElementById('lessonGrid'); const progressBar = document.getElementById('progressBar'); const progressPercent = document.getElementById('progressPercent'); const progressText = document.getElementById('progressText'); const journeyTrack = document.getElementById('journeyTrack'); const dialog = document.getElementById('lessonDialog'); const playground = document.getElementById('playground'); const codeEditor = document.getElementById('codeEditor'); const codeOutput = document.getElementById('codeOutput'); const playgroundFrame = document.getElementById('playgroundFrame');
+let sandboxReady = false;
+let pendingSandboxMessage = null;
+playgroundFrame.addEventListener('load', () => { sandboxReady = true; if (pendingSandboxMessage) { playgroundFrame.contentWindow.postMessage(pendingSandboxMessage, '*'); pendingSandboxMessage = null; } });
+function sendSandboxMessage(message) { const dispatch = () => playgroundFrame.contentWindow.postMessage(message, '*'); if (sandboxReady) dispatch(); else { pendingSandboxMessage = message; setTimeout(() => { if (pendingSandboxMessage === message) { dispatch(); pendingSandboxMessage = null; } }, 120); } }
+playgroundFrame.srcdoc = '<!doctype html><script>window.addEventListener("message",async(event)=>{if(!event.data||!event.data.type)return;const lines=[];const originalLog=console.log;const originalError=console.error;console.log=(...values)=>lines.push(values.map(String).join(" "));console.error=(...values)=>lines.push("Error: "+values.map(String).join(" "));try{if(event.data.type==="test"&&event.data.lessonId==="javascript-1"){const button={textContent:"Change me",listeners:{}};const fakeDocument={querySelector:()=>button};button.addEventListener=(name,handler)=>{button.listeners[name]=handler};Function("document",event.data.code)(fakeDocument);if(typeof button.listeners.click!=="function")throw new Error("No click listener was registered.");button.listeners.click();if(button.textContent!=="Clicked!")throw new Error("The button text did not change to Clicked!");lines.push("All tests passed: click changes the button text.")}else{await Function("return (async()=>{"+event.data.code+"\n})()")()}window.parent.postMessage({type:"result",output:lines.join("\\n")||"Code ran with no console output."},"*")}catch(error){window.parent.postMessage({type:"result",output:"Test failed: "+error.message},"*")}finally{console.log=originalLog;console.error=originalError}});<\/script>';
+function runLessonTest() { try { const button = { textContent: 'Change me', listeners: {} }; const fakeDocument = { querySelector: () => button }; button.addEventListener = (name, handler) => { button.listeners[name] = handler; }; Function('document', codeEditor.value)(fakeDocument); if (typeof button.listeners.click !== 'function') throw new Error('No click listener was registered.'); button.listeners.click(); if (button.textContent !== 'Clicked!') throw new Error('The button text did not change to Clicked!.'); codeOutput.textContent = 'All tests passed: click changes the button text.'; } catch (error) { codeOutput.textContent = `Test failed: ${error.message}`; } }
+function saveProgress() { localStorage.setItem('code-atlas-progress', JSON.stringify(state.completed)); }
+function renderFilters() { document.getElementById('pathFilters').innerHTML = paths.map((path) => `<button class="path-filter ${state.filter === path.id ? 'active' : ''}" data-filter="${path.id}" type="button">${path.label}</button>`).join(''); }
+function renderLessons() { const visible = state.filter === 'all' ? lessons : lessons.filter((lesson) => lesson.path === state.filter); lessonGrid.innerHTML = visible.map((lesson, index) => { const done = state.completed.includes(lesson.id); return `<article class="lesson-card ${done ? 'complete' : ''}" style="--delay: ${index * 70}ms"><div class="lesson-top"><span class="lesson-icon icon-${lesson.path}">${lesson.icon}</span><span class="lesson-level">${lesson.level}</span></div><h3>${lesson.title}</h3><p>${lesson.description}</p><div class="lesson-meta"><span>${lesson.duration}</span><button class="lesson-link" data-lesson="${lesson.id}" type="button">${done ? 'Review' : 'Start'} <span>-&gt;</span></button></div></article>`; }).join(''); }
+function renderJourney() { const nextIndex = lessons.findIndex((lesson) => !state.completed.includes(lesson.id)); journeyTrack.innerHTML = lessons.map((lesson, index) => { const done = state.completed.includes(lesson.id); const current = index === nextIndex; return `<button class="journey-node ${done ? 'done' : ''} ${current ? 'current' : ''}" data-lesson="${lesson.id}" type="button"><span class="journey-dot">${done ? '✓' : String(index + 1).padStart(2, '0')}</span><span><strong>${lesson.title}</strong><small>${done ? 'Complete' : current ? 'Next mission' : lesson.path}</small></span></button>`; }).join(''); document.getElementById('journeyStatus').textContent = nextIndex === -1 ? 'Trail complete' : `${lessons.length - (nextIndex + 1)} ahead`; }
+function updateProgress() { const percentage = Math.round((state.completed.length / lessons.length) * 100); const exploredPaths = new Set(lessons.filter((lesson) => state.completed.includes(lesson.id)).map((lesson) => lesson.path)).size; progressPercent.textContent = `${percentage}%`; progressText.textContent = `${state.completed.length} of ${lessons.length} lessons complete`; progressBar.style.width = `${percentage}%`; document.getElementById('completedStat').textContent = state.completed.length; document.getElementById('pointsStat').textContent = state.completed.length * 20; document.getElementById('pathsStat').textContent = exploredPaths; renderJourney(); }
+function openLesson(id) {
+  const lesson = lessons.find((item) => item.id === id);
+  if (!lesson) return;
+  state.selectedLesson = lesson;
+  document.getElementById('dialogKicker').textContent = `${lesson.path} / ${lesson.level}`;
+  document.getElementById('dialogTitle').textContent = lesson.title;
+  document.getElementById('dialogDescription').textContent = lesson.description;
+  document.getElementById('teachConcept').textContent = teaching[id].concept;
+  document.getElementById('teachPredict').textContent = teaching[id].predict;
+  document.getElementById('teachBuild').textContent = teaching[id].build;
+  document.getElementById('dialogFile').textContent = lesson.file;
+  document.getElementById('dialogCode').textContent = lesson.code;
+  playground.hidden = lesson.path !== 'javascript';
+  codeEditor.value = lesson.code;
+  codeOutput.textContent = 'Run your code to see what happens.';
+  const sourceLink = document.getElementById('taskSource');
+  sourceLink.textContent = lesson.source;
+  sourceLink.href = sources[id];
+  document.getElementById('taskTitle').textContent = lesson.task;
+  document.getElementById('taskPrompt').textContent = lesson.prompt;
+  document.getElementById('taskObstacle').textContent = lesson.obstacle;
+  document.getElementById('taskHint').textContent = '';
+  document.getElementById('taskFeedback').textContent = '';
+  document.getElementById('taskAnswer').value = '';
+  document.getElementById('completeLesson').innerHTML = state.completed.includes(id) ? 'Completed <span>✓</span>' : 'Complete after checking <span>-&gt;</span>';
+  dialog.showModal();
 }
 
-function hasMatch(task, query) {
-  if (!query) return true;
-  const value = `${task.title} ${task.notes || ''} ${task.category || ''}`.toLowerCase();
-  return value.includes(query.toLowerCase());
+function checkAnswer() {
+  const lesson = state.selectedLesson;
+  const answer = document.getElementById('taskAnswer').value.trim();
+  const feedback = document.getElementById('taskFeedback');
+  if (!answer) { feedback.className = 'task-feedback error'; feedback.textContent = 'Write a solution first. A rough attempt is more useful than a blank answer.'; return false; }
+  const passed = lesson.checks.every((check) => check.test(answer));
+  feedback.className = `task-feedback ${passed ? 'success' : 'error'}`;
+  feedback.textContent = passed ? `Passed. ${lesson.solution}` : 'Not quite yet. Compare your attempt with the obstacle, then use the hint if you need a nudge.';
+  return passed;
 }
-
-function getVisibleTasks() {
-  const query = state.search.trim();
-  return state.tasks.filter((task) => {
-    const matchesSearch = hasMatch(task, query);
-    const matchesFilter = state.activeFilter === 'all'
-      ? true
-      : state.activeFilter === 'todo'
-        ? !task.completed
-        : task.completed;
-    return matchesSearch && matchesFilter;
-  });
-}
-
-function getTasksForView() {
-  const visible = getVisibleTasks();
-  if (state.activeView === 'today') {
-    const today = new Date().toISOString().slice(0, 10);
-    return visible.filter((task) => task.dueDate === today || (!task.dueDate && !task.completed));
-  }
-  if (state.activeView === 'focus') {
-    return [...visible].filter((task) => task.priority === 'high' || task.completed === false).sort((a, b) => {
-      const rank = { high: 3, medium: 2, low: 1 };
-      return (rank[b.priority] || 0) - (rank[a.priority] || 0);
-    });
-  }
-  return visible;
-}
-
-function applyTheme() {
-  document.body.classList.toggle('dark-mode', state.darkMode);
-  themeToggle.textContent = state.darkMode ? 'Light mode' : 'Dark mode';
-  localStorage.setItem('node-planner-theme', state.darkMode ? 'dark' : 'light');
-}
-
-function applyAccentColor() {
-  const accent = state.accentColor || '#7c3aed';
-  document.documentElement.style.setProperty('--primary', accent);
-  document.documentElement.style.setProperty('--primary-strong', accent);
-  accentColorPicker.value = accent;
-  localStorage.setItem('node-planner-accent', accent);
-}
-
-function applyBackgroundImage() {
-  const savedBackground = localStorage.getItem('node-planner-background');
-  if (!savedBackground) {
-    document.body.style.backgroundImage = '';
-    return;
-  }
-
-  document.body.style.backgroundImage = `url("${savedBackground}")`;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
-  document.body.style.backgroundAttachment = 'fixed';
-}
-
-function applySettings() {
-  document.body.classList.toggle('glass-mode', state.glassMode);
-  document.body.classList.toggle('blurred-bg', state.blurBackground);
-  quickAddWidget.classList.toggle('hidden', !state.quickAddEnabled);
-
-  glassModeToggle.checked = state.glassMode;
-  blurBackgroundToggle.checked = state.blurBackground;
-  notificationToggle.checked = state.notificationEnabled;
-  reminderWindowSelect.value = String(state.reminderWindowMinutes);
-  quickAddToggle.checked = state.quickAddEnabled;
-
-  localStorage.setItem('node-planner-glass', String(state.glassMode));
-  localStorage.setItem('node-planner-blur', String(state.blurBackground));
-  localStorage.setItem('node-planner-notifications', String(state.notificationEnabled));
-  localStorage.setItem('node-planner-reminder-window', String(state.reminderWindowMinutes));
-  localStorage.setItem('node-planner-quick-add', String(state.quickAddEnabled));
-}
-
-function getReminderStamp(task) {
-  if (!task.reminderDate || !task.reminderTime) return null;
-  return `${task.id}:${task.reminderDate}T${task.reminderTime}`;
-}
-
-function getReminderLog() {
-  try {
-    return JSON.parse(localStorage.getItem('node-planner-reminder-log') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveReminderLog(entries) {
-  localStorage.setItem('node-planner-reminder-log', JSON.stringify(entries));
-}
-
-async function ensureNotificationPermission() {
-  if (!('Notification' in window)) {
-    return false;
-  }
-
-  if (Notification.permission === 'granted') {
-    return true;
-  }
-
-  if (Notification.permission === 'denied') {
-    return false;
-  }
-
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-function checkReminderNotifications() {
-  if (!state.notificationEnabled || !('Notification' in window) || Notification.permission !== 'granted') {
-    return;
-  }
-
-  const log = getReminderLog();
-  const nextLog = [...log];
-
-  for (const task of state.tasks) {
-    const stamp = getReminderStamp(task);
-    if (!stamp || task.completed) continue;
-
-    const reminderTime = new Date(`${task.reminderDate}T${task.reminderTime}`);
-    if (Number.isNaN(reminderTime.getTime())) continue;
-
-    const reminderWindowMs = state.reminderWindowMinutes * 60 * 1000;
-    const startWindow = new Date(reminderTime.getTime() - reminderWindowMs);
-    const now = new Date();
-
-    if (now >= reminderTime && !nextLog.includes(stamp) && now >= startWindow) {
-      new Notification('Task reminder', {
-        body: `${task.title} is due now.`,
-      });
-      nextLog.push(stamp);
-    }
-  }
-
-  saveReminderLog(nextLog);
-}
-
-async function fetchTasks() {
-  const response = await fetch(`/api/tasks?filter=${encodeURIComponent(state.activeFilter)}`);
-  if (!response.ok) {
-    throw new Error('Unable to load tasks.');
-  }
-
-  const tasks = await response.json();
-  state.tasks = tasks;
-  localStorage.setItem('node-planner-tasks', JSON.stringify(tasks));
-  return tasks;
-}
-
-async function fetchStats() {
-  const response = await fetch('/api/stats');
-  if (!response.ok) {
-    throw new Error('Unable to load stats.');
-  }
-
-  return response.json();
-}
-
-function renderTaskList(targetList, tasks) {
-  if (!tasks.length) {
-    targetList.innerHTML = '<li class="empty-state">No tasks in this view.</li>';
-    return;
-  }
-
-  targetList.innerHTML = tasks.map((task) => {
-    const priorityClass = `priority-${task.priority || 'medium'}`;
-    const categoryClass = `category-${task.category || 'general'}`;
-    const reminderText = task.reminderDate && task.reminderTime ? `Reminder ${task.reminderDate} ${task.reminderTime}` : '';
-  const tags = [
-      `<span class="task-badge ${priorityClass}">${(task.priority || 'medium').toUpperCase()}</span>`,
-      `<span class="task-badge ${categoryClass}">${(task.category || 'general').toUpperCase()}</span>`,
-      task.dueDate ? `<span class="task-badge category-general">Due ${formatDate(task.dueDate)}</span>` : '',
-      reminderText ? `<span class="task-badge category-general">${reminderText}</span>` : '',
-      task.recurring ? '<span class="task-badge category-general">Recurring</span>' : '',
-    ].join('');
-
-    return `
-      <li class="task-item ${task.completed ? 'done' : ''}" draggable="true" data-id="${task.id}">
-        <div class="task-main">
-          <input class="task-checkbox" type="checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}" />
-          <div class="task-meta">
-            <span class="task-text">${task.title}</span>
-            <div class="task-details">
-              ${tags}
-              ${task.notes ? `<span>${task.notes}</span>` : ''}
-            </div>
-          </div>
-        </div>
-        <div class="task-actions">
-          <button class="task-edit" type="button" data-edit-id="${task.id}">Edit</button>
-          <button class="task-delete" type="button" data-delete-id="${task.id}">Delete</button>
-        </div>
-      </li>
-    `;
-  }).join('');
-}
-
-function renderCalendar() {
-  const start = new Date();
-  const dayOfWeek = start.getDay();
-  const mondayOffset = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek);
-  const weekStart = new Date(start);
-  weekStart.setDate(start.getDate() + mondayOffset);
-
-  const cells = [];
-  for (let i = 0; i < 7; i += 1) {
-    const date = new Date(weekStart);
-    date.setDate(weekStart.getDate() + i);
-    const isoDate = date.toISOString().slice(0, 10);
-    const matchingTasks = state.tasks.filter((task) => task.dueDate === isoDate && !task.completed);
-
-    cells.push(`
-      <div class="day-card ${isoDate === new Date().toISOString().slice(0, 10) ? 'is-today' : ''}">
-        <h4>${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</h4>
-        <ul>
-          ${matchingTasks.length ? matchingTasks.map((task) => `<li>${task.title}</li>`).join('') : '<li>No tasks</li>'}
-        </ul>
-      </div>
-    `);
-  }
-
-  calendarGrid.innerHTML = cells.join('');
-}
-
-function renderFocusPanel() {
-  const focusTasks = getTasksForView().filter((task) => task.priority === 'high' || task.priority === 'medium');
-  renderTaskList(focusList, focusTasks);
-}
-
-function renderViews() {
-  const views = document.querySelectorAll('.view');
-  views.forEach((view) => {
-    view.classList.toggle('active', view.id === `${state.activeView}View`);
-  });
-
-  const visibleTasks = getTasksForView();
-  renderTaskList(taskList, visibleTasks);
-  renderFocusPanel();
-  renderCalendar();
-}
-
-async function quickAddTask(title) {
-  const trimmed = String(title || '').trim();
-  if (!trimmed) return;
-
-  const response = await fetch('/api/tasks', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: trimmed,
-      priority: 'medium',
-      category: 'general',
-      dueDate: '',
-      notes: '',
-    }),
-  });
-
-  if (response.ok) {
-    quickAddInput.value = '';
-    await refresh();
-  }
-}
-
-async function refresh() {
-  try {
-    const tasks = await fetchTasks();
-    state.tasks = tasks;
-    const stats = await fetchStats();
-    renderViews();
-
-    totalCount.textContent = String(stats.total);
-    doneCount.textContent = String(stats.completed);
-    pendingCount.textContent = String(stats.pending);
-    ringValue.textContent = `${stats.percentage}%`;
-
-    const ring = document.querySelector('.ring');
-    if (ring) {
-      const degrees = (stats.percentage / 100) * 360;
-      ring.style.background = `conic-gradient(#8b5cf6 0deg, #8b5cf6 ${degrees}deg, rgba(255,255,255,0.15) ${degrees}deg 360deg)`;
-    }
-  } catch (error) {
-    taskList.innerHTML = `<li class="empty-state">${error.message}</li>`;
-    focusList.innerHTML = '<li class="empty-state">Unable to load focus tasks.</li>';
-  }
-}
-
-function addDays(dateString, days) {
-  if (!dateString) return '';
-  const date = new Date(`${dateString}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function applyRecurring(task) {
-  if (!task.recurring || !task.repeatInterval || Number(task.repeatInterval) <= 0) return task;
-  const nextDate = addDays(task.dueDate || new Date().toISOString().slice(0, 10), Number(task.repeatInterval));
-  return { ...task, completed: false, dueDate: nextDate };
-}
-
-async function saveTaskUpdate(id, payload) {
-  const response = await fetch(`/api/tasks/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error('Could not update task.');
-  }
-
-  return response.json();
-}
-
-taskForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const title = taskInput.value.trim();
-
-  if (!title) {
-    taskInput.focus();
-    return;
-  }
-
-  const repeat = taskRepeat.value;
-  const payload = {
-    title,
-    priority: taskPriority.value,
-    category: taskCategory.value,
-    dueDate: taskDueDate.value,
-    reminderDate: taskReminderDate.value,
-    reminderTime: taskReminderTime.value,
-    notes: taskNotes.value.trim(),
-    recurring: repeat !== 'none',
-    repeatInterval: repeat === 'none' ? 0 : repeat === 'daily' ? 1 : repeat === 'weekly' ? 7 : 30,
-  };
-
-  const response = await fetch('/api/tasks', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to add task.');
-  }
-
-  taskInput.value = '';
-  taskPriority.value = 'medium';
-  taskCategory.value = 'general';
-  taskDueDate.value = '';
-  taskReminderDate.value = '';
-  taskReminderTime.value = '';
-  taskRepeat.value = 'none';
-  taskNotes.value = '';
-  await refresh();
-});
-
-taskList.addEventListener('change', async (event) => {
-  const checkbox = event.target.closest('.task-checkbox');
-  if (!checkbox) return;
-
-  const id = Number(checkbox.dataset.id);
-  const task = state.tasks.find((entry) => Number(entry.id) === id);
-
-  if (!task) return;
-
-  const nextCompleted = checkbox.checked;
-  const nextTask = nextCompleted && task.recurring ? applyRecurring({ ...task, completed: true }) : { ...task, completed: nextCompleted };
-
-  await saveTaskUpdate(id, {
-    completed: nextCompleted,
-    dueDate: nextTask.dueDate || task.dueDate,
-    recurring: Boolean(task.recurring),
-    repeatInterval: Number(task.repeatInterval) || 0,
-  });
-
-  if (nextCompleted && task.recurring) {
-    await saveTaskUpdate(id, {
-      completed: false,
-      dueDate: nextTask.dueDate,
-    });
-  }
-
-  await refresh();
-});
-
-taskList.addEventListener('click', async (event) => {
-  const editButton = event.target.closest('[data-edit-id]');
-  if (editButton) {
-    const id = Number(editButton.dataset.editId);
-    const task = state.tasks.find((entry) => Number(entry.id) === id);
-    if (!task) return;
-
-    const row = editButton.closest('.task-item');
-    const template = document.getElementById('taskEditorTemplate');
-    const clone = template.content.cloneNode(true);
-
-    clone.querySelector('.editor-title').value = task.title;
-    clone.querySelector('.editor-priority').value = task.priority || 'medium';
-    clone.querySelector('.editor-category').value = task.category || 'general';
-    clone.querySelector('.editor-date').value = task.dueDate || '';
-    clone.querySelector('.editor-reminder-date').value = task.reminderDate || task.dueDate || '';
-    clone.querySelector('.editor-reminder-time').value = task.reminderTime || '';
-    clone.querySelector('.editor-repeat').value = task.recurring ? (task.repeatInterval === 1 ? 'daily' : task.repeatInterval === 7 ? 'weekly' : 'monthly') : 'none';
-    clone.querySelector('.editor-notes').value = task.notes || '';
-
-    clone.querySelector('.save-edit').addEventListener('click', async () => {
-      const repeatValue = clone.querySelector('.editor-repeat').value;
-      await saveTaskUpdate(id, {
-        title: clone.querySelector('.editor-title').value,
-        priority: clone.querySelector('.editor-priority').value,
-        category: clone.querySelector('.editor-category').value,
-        dueDate: clone.querySelector('.editor-date').value,
-        reminderDate: clone.querySelector('.editor-reminder-date').value,
-        reminderTime: clone.querySelector('.editor-reminder-time').value,
-        notes: clone.querySelector('.editor-notes').value,
-        recurring: repeatValue !== 'none',
-        repeatInterval: repeatValue === 'none' ? 0 : repeatValue === 'daily' ? 1 : repeatValue === 'weekly' ? 7 : 30,
-      });
-      await refresh();
-    });
-
-    clone.querySelector('.cancel-edit').addEventListener('click', () => refresh());
-    row.innerHTML = '';
-    row.appendChild(clone);
-    return;
-  }
-
-  const deleteButton = event.target.closest('[data-delete-id]');
-  if (!deleteButton) return;
-
-  const id = Number(deleteButton.dataset.deleteId);
-  await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-  await refresh();
-});
-
-filterButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    state.activeFilter = button.dataset.filter;
-    filterButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
-    refresh();
-  });
-});
-
-navButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    state.activeView = button.dataset.view;
-    navButtons.forEach((item) => item.classList.toggle('active', item === button));
-    renderViews();
-  });
-});
-
-themeToggle.addEventListener('click', () => {
-  state.darkMode = !state.darkMode;
-  applyTheme();
-});
-
-notificationToggle.addEventListener('change', async () => {
-  state.notificationEnabled = notificationToggle.checked;
-  applySettings();
-
-  if (state.notificationEnabled) {
-    await ensureNotificationPermission();
-    checkReminderNotifications();
-  }
-});
-
-reminderWindowSelect.addEventListener('change', () => {
-  state.reminderWindowMinutes = Number(reminderWindowSelect.value || 15);
-  applySettings();
-  checkReminderNotifications();
-});
-
-glassModeToggle.addEventListener('change', () => {
-  state.glassMode = glassModeToggle.checked;
-  applySettings();
-});
-
-blurBackgroundToggle.addEventListener('change', () => {
-  state.blurBackground = blurBackgroundToggle.checked;
-  applySettings();
-});
-
-accentColorPicker.addEventListener('input', (event) => {
-  state.accentColor = event.target.value;
-  applyAccentColor();
-});
-
-quickAddToggle.addEventListener('change', () => {
-  state.quickAddEnabled = quickAddToggle.checked;
-  applySettings();
-});
-
-backgroundUpload.addEventListener('change', (event) => {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const dataUrl = String(reader.result || '');
-    localStorage.setItem('node-planner-background', dataUrl);
-    applyBackgroundImage();
-  };
-  reader.readAsDataURL(file);
-});
-
-clearBackgroundBtn.addEventListener('click', () => {
-  localStorage.removeItem('node-planner-background');
-  applyBackgroundImage();
-});
-
-quickAddForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  await quickAddTask(quickAddInput.value);
-});
-
-searchInput.addEventListener('input', (event) => {
-  state.search = event.target.value;
-  renderViews();
-});
-
-taskList.addEventListener('dragstart', (event) => {
-  const item = event.target.closest('.task-item');
-  if (!item) return;
-  item.classList.add('dragging');
-  event.dataTransfer.setData('text/plain', item.dataset.id);
-});
-
-taskList.addEventListener('dragend', (event) => {
-  const item = event.target.closest('.task-item');
-  if (item) item.classList.remove('dragging');
-});
-
-taskList.addEventListener('dragover', (event) => {
-  event.preventDefault();
-});
-
-taskList.addEventListener('drop', async (event) => {
-  event.preventDefault();
-  const sourceId = Number(event.dataTransfer.getData('text/plain'));
-  const target = event.target.closest('.task-item');
-  if (!target || !sourceId) return;
-
-  const targetId = Number(target.dataset.id);
-  const order = state.tasks.map((task) => Number(task.id));
-  const sourceIndex = order.indexOf(sourceId);
-  const targetIndex = order.indexOf(targetId);
-
-  if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return;
-
-  const [moved] = order.splice(sourceIndex, 1);
-  order.splice(targetIndex, 0, moved);
-
-  const payload = { orderedIds: order };
-  await fetch('/api/tasks/reorder', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  await refresh();
-});
-
-todayDate.textContent = new Intl.DateTimeFormat('en-US', {
-  weekday: 'short',
-  month: 'short',
-  day: 'numeric',
-}).format(new Date());
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
-
-applyTheme();
-applyAccentColor();
-applyBackgroundImage();
-applySettings();
-setInterval(checkReminderNotifications, 30000);
-refresh();
+document.getElementById('pathFilters').addEventListener('click', (event) => { const button = event.target.closest('[data-filter]'); if (!button) return; state.filter = button.dataset.filter; renderFilters(); renderLessons(); });
+lessonGrid.addEventListener('click', (event) => { const button = event.target.closest('[data-lesson]'); if (button) openLesson(button.dataset.lesson); });
+journeyTrack.addEventListener('click', (event) => { const button = event.target.closest('[data-lesson]'); if (button) openLesson(button.dataset.lesson); });
+document.getElementById('runCode').addEventListener('click', () => { codeOutput.textContent = 'Running...'; sendSandboxMessage({ type: 'run', code: codeEditor.value }); });
+document.getElementById('runTests').addEventListener('click', () => { codeOutput.textContent = 'Running tests...'; if (state.selectedLesson.id === 'javascript-1') runLessonTest(); else sendSandboxMessage({ type: 'test', lessonId: state.selectedLesson.id, code: codeEditor.value }); });
+window.addEventListener('message', (event) => { if (event.source === playgroundFrame.contentWindow && event.data && event.data.type === 'result') codeOutput.textContent = event.data.output; });
+document.querySelector('.primary-button').addEventListener('click', () => openLesson('python-1'));
+document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
+document.getElementById('checkAnswer').addEventListener('click', checkAnswer);
+document.getElementById('showHint').addEventListener('click', () => { document.getElementById('taskHint').textContent = state.selectedLesson.hint; });
+document.getElementById('completeLesson').addEventListener('click', () => { if (!checkAnswer()) return; const isNew = !state.completed.includes(state.selectedLesson.id); if (isNew) { state.completed.push(state.selectedLesson.id); celebrateCompletion(); } saveProgress(); updateProgress(); renderLessons(); openLesson(state.selectedLesson.id); });
+document.querySelector('.close-tip').addEventListener('click', (event) => event.currentTarget.closest('.tip-panel').remove());
+function resetProgress() { state.completed = []; saveProgress(); updateProgress(); renderLessons(); document.getElementById('settingsProgressText').textContent = 'Your progress is stored on this device.'; }
+document.getElementById('resetProgress').addEventListener('click', resetProgress);
+document.getElementById('settingsReset').addEventListener('click', resetProgress);
+document.getElementById('viewAll').addEventListener('click', () => { state.filter = 'all'; renderFilters(); renderLessons(); });
+const savedTheme = localStorage.getItem('code-atlas-theme') || 'light';
+function applyTheme(theme) { const dark = theme === 'dark'; document.body.classList.toggle('dark-mode', dark); document.getElementById('themeToggle').textContent = dark ? 'Light mode' : 'Dark mode'; document.getElementById('settingsThemeToggle').textContent = dark ? 'Light mode' : 'Dark mode'; document.getElementById('themeColorMeta').content = dark ? '#071520' : '#102a43'; document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; localStorage.setItem('code-atlas-theme', dark ? 'dark' : 'light'); }
+document.getElementById('themeToggle').addEventListener('click', () => applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark'));
+document.getElementById('settingsThemeToggle').addEventListener('click', () => applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark'));
+document.querySelectorAll('.nav-link').forEach((button) => { button.addEventListener('click', () => { document.querySelectorAll('.nav-link').forEach((item) => item.classList.toggle('active', item === button)); document.getElementById(button.dataset.target).scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
+function celebrateCompletion() { const burst = document.createElement('div'); burst.className = 'celebration'; burst.innerHTML = '<span>+20 XP</span><i></i><i></i><i></i><i></i><i></i>'; document.body.appendChild(burst); setTimeout(() => burst.remove(), 1100); }
+applyTheme(savedTheme);
+renderFilters(); renderLessons(); updateProgress();
