@@ -41,6 +41,20 @@ const sources = {
   'linux-3': 'https://man7.org/linux/man-pages/man1/chmod.1.html',
   'linux-4': 'https://man7.org/linux/man-pages/man1/grep.1.html',
 };
+const lessonGuides = {
+  'python-1': { why: 'Programs often receive text from people, files, and networks. Converting values deliberately prevents confusing comparisons.', example: 'age = int(input("Age: "))\nif age >= 18:\n    print("Adult")', mistake: 'input("7") is the string "7", not the number 7. Comparing those values does not mean what it looks like.' },
+  'python-2': { why: 'Loops let a program repeat work while keeping the rule in one place. This is the foundation of automation.', example: 'for item in ["learn", "build"]:\n    print(item)', mistake: 'range(3) produces 0, 1, and 2. The end number is excluded.' },
+  'javascript-1': { why: 'Events connect user actions to behavior. Buttons, forms, keyboards, and games all depend on this pattern.', example: 'button.addEventListener("click", () => {\n  output.textContent = "Done";\n});', mistake: 'Putting code in inline onclick attributes mixes behavior with markup and becomes hard to maintain.' },
+  'javascript-2': { why: 'Real apps wait for networks. Async code lets the interface stay responsive while data is loading or failing.', example: 'try {\n  const response = await fetch(url);\n} catch (error) {\n  showError(error);\n}', mistake: 'A rejected fetch is not handled by an if statement. It must be caught as an error.' },
+  'linux-1': { why: 'The command line becomes powerful when you can locate yourself, inspect files, and create predictable project folders.', example: 'pwd\nmkdir projects\ncd projects\nls -la', mistake: 'Commands act on your current directory. Check pwd before changing or deleting anything.' },
+  'linux-2': { why: 'Pipelines turn small tools into focused workflows, which is how operators inspect real logs without opening every file.', example: 'find . -name "*.log" -print0 | xargs -0 grep -n "ERROR"', mistake: 'Plain newlines are unsafe separators when filenames can contain spaces or newlines.' },
+  'python-3': { why: 'Functions make code reusable, testable, and easier to explain. Nearly every useful Python program is built from them.', example: 'def double(number):\n    return number * 2\n\nresult = double(4)', mistake: 'return gives a value back; print only displays it. Use return when another part of the program needs the result.' },
+  'python-4': { why: 'Lists model real collections such as tasks, users, files, and search results. They change as a program runs.', example: 'tasks = ["learn"]\ntasks.append("build")\nprint(len(tasks))', mistake: 'Do not hard-code a list length after the list can change. Ask len for the current value.' },
+  'javascript-3': { why: 'Small helper functions prevent copy-and-paste bugs and give each piece of behavior a name you can test.', example: 'function double(number) {\n  return number * 2;\n}', mistake: 'Defining a function does not run it. You must call it with parentheses.' },
+  'javascript-4': { why: 'Validation protects users from confusing errors and protects your application from incomplete input.', example: 'form.addEventListener("submit", (event) => {\n  event.preventDefault();\n});', mistake: 'Always preventing submission can make a valid form unusable. Prevent the default only when validation fails.' },
+  'linux-3': { why: 'Good permissions reduce damage when scripts or accounts are misused. Give only the access a task needs.', example: 'chmod u+x deploy.sh\n./deploy.sh', mistake: 'chmod 777 is usually excessive. Start with the narrowest permission that works.' },
+  'linux-4': { why: 'Focused searches make large codebases manageable and avoid wasting time scanning dependencies or generated files.', example: 'grep -R "TODO" . --include="*.js"', mistake: 'A recursive search without a file filter can return noisy results from node_modules and build output.' },
+};
 const state = { filter: 'all', completed: JSON.parse(localStorage.getItem('code-atlas-progress') || '[]'), selectedLesson: null };
 const lessonGrid = document.getElementById('lessonGrid'); const progressBar = document.getElementById('progressBar'); const progressPercent = document.getElementById('progressPercent'); const progressText = document.getElementById('progressText'); const journeyTrack = document.getElementById('journeyTrack'); const dialog = document.getElementById('lessonDialog'); const playground = document.getElementById('playground'); const codeEditor = document.getElementById('codeEditor'); const codeOutput = document.getElementById('codeOutput'); const playgroundFrame = document.getElementById('playgroundFrame');
 let sandboxReady = false;
@@ -64,6 +78,9 @@ function openLesson(id) {
   document.getElementById('teachConcept').textContent = teaching[id].concept;
   document.getElementById('teachPredict').textContent = teaching[id].predict;
   document.getElementById('teachBuild').textContent = teaching[id].build;
+  document.getElementById('guideWhy').textContent = lessonGuides[id].why;
+  document.getElementById('guideExample').textContent = lessonGuides[id].example;
+  document.getElementById('guideMistake').textContent = lessonGuides[id].mistake;
   document.getElementById('dialogFile').textContent = lesson.file;
   document.getElementById('dialogCode').textContent = lesson.code;
   playground.hidden = lesson.path !== 'javascript';
