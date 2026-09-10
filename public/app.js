@@ -164,12 +164,15 @@ document.getElementById('settingsReset').addEventListener('click', resetProgress
 document.getElementById('viewAll').addEventListener('click', () => { state.filter = 'all'; renderFilters(); renderLessons(); });
 const savedTheme = localStorage.getItem('code-atlas-theme') || 'light';
 const savedAccent = localStorage.getItem('code-atlas-accent') || '#149b8a';
+const paletteDefaults = { paletteAccent: '#149b8a', paletteBackground: '#f4f7f5', palettePanel: '#ffffff', paletteText: '#102a43', paletteSidebar: '#102a43', paletteBorder: '#d9e2e8' };
 function applyTheme(theme) { const dark = theme === 'dark'; document.body.classList.toggle('dark-mode', dark); document.getElementById('themeToggle').textContent = dark ? 'Light mode' : 'Dark mode'; document.getElementById('settingsThemeToggle').textContent = dark ? 'Light mode' : 'Dark mode'; document.getElementById('themeColorMeta').content = dark ? '#071520' : '#102a43'; document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; localStorage.setItem('code-atlas-theme', dark ? 'dark' : 'light'); }
-function applyAccent(color) { document.documentElement.style.setProperty('--teal', color); document.getElementById('accentColorPicker').value = color; localStorage.setItem('code-atlas-accent', color); }
+function applyAccent(color) { document.documentElement.style.setProperty('--teal', color); document.body.style.setProperty('--teal', color); document.getElementById('accentColorPicker').value = color; document.getElementById('paletteAccent').value = color; localStorage.setItem('code-atlas-accent', color); }
+function applyPalette(palette) { const variables = { paletteAccent: '--teal', paletteBackground: '--paper', palettePanel: '--white', paletteText: '--ink', paletteSidebar: '--sidebar', paletteBorder: '--line' }; Object.entries(variables).forEach(([inputId, variable]) => { const color = palette[inputId] || paletteDefaults[inputId]; document.documentElement.style.setProperty(variable, color); document.body.style.setProperty(variable, color); document.getElementById(inputId).value = color; }); applyAccent(palette.paletteAccent || paletteDefaults.paletteAccent); localStorage.setItem('code-atlas-palette', JSON.stringify(palette)); }
 document.getElementById('themeToggle').addEventListener('click', () => applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark'));
 document.getElementById('settingsThemeToggle').addEventListener('click', () => applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark'));
 document.getElementById('accentColorPicker').addEventListener('input', (event) => applyAccent(event.target.value));
 document.querySelectorAll('[data-accent]').forEach((button) => button.addEventListener('click', () => applyAccent(button.dataset.accent)));
+Object.keys(paletteDefaults).forEach((inputId) => document.getElementById(inputId).addEventListener('input', (event) => { const palette = JSON.parse(localStorage.getItem('code-atlas-palette') || '{}'); palette[inputId] = event.target.value; applyPalette({ ...paletteDefaults, ...palette }); }));
 document.querySelectorAll('.nav-link').forEach((button) => { button.addEventListener('click', () => { document.querySelectorAll('.nav-link').forEach((item) => item.classList.toggle('active', item === button)); document.getElementById(button.dataset.target).scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
 function celebrateCompletion() { const burst = document.createElement('div'); burst.className = 'celebration'; burst.innerHTML = '<span>+20 XP</span><i></i><i></i><i></i><i></i><i></i>'; document.body.appendChild(burst); setTimeout(() => burst.remove(), 1100); }
 const savedDevice = localStorage.getItem('code-atlas-device') || 'windows';
@@ -178,6 +181,7 @@ document.getElementById('phoneMode').addEventListener('click', () => applyDevice
 document.getElementById('windowsMode').addEventListener('click', () => applyDeviceMode('windows'));
 applyTheme(savedTheme);
 applyAccent(savedAccent);
+applyPalette({ ...paletteDefaults, ...JSON.parse(localStorage.getItem('code-atlas-palette') || '{}'), paletteAccent: localStorage.getItem('code-atlas-accent') || undefined });
 applyDeviceMode(savedDevice);
 document.getElementById('learnerNotes').value = localStorage.getItem('code-atlas-notes') || '';
 renderFilters(); renderLessons(); updateProgress();
