@@ -55,7 +55,7 @@ const lessonGuides = {
   'linux-3': { why: 'Good permissions reduce damage when scripts or accounts are misused. Give only the access a task needs.', example: 'chmod u+x deploy.sh\n./deploy.sh', mistake: 'chmod 777 is usually excessive. Start with the narrowest permission that works.' },
   'linux-4': { why: 'Focused searches make large codebases manageable and avoid wasting time scanning dependencies or generated files.', example: 'grep -R "TODO" . --include="*.js"', mistake: 'A recursive search without a file filter can return noisy results from node_modules and build output.' },
 };
-const state = { filter: 'all', completed: JSON.parse(localStorage.getItem('code-atlas-progress') || '[]'), selectedLesson: null };
+const state = { filter: 'all', completed: JSON.parse(localStorage.getItem('code-atlas-progress') || '[]'), predictions: JSON.parse(localStorage.getItem('code-atlas-predictions') || '{}'), selectedLesson: null };
 const lessonGrid = document.getElementById('lessonGrid'); const progressBar = document.getElementById('progressBar'); const progressPercent = document.getElementById('progressPercent'); const progressText = document.getElementById('progressText'); const journeyTrack = document.getElementById('journeyTrack'); const dialog = document.getElementById('lessonDialog'); const playground = document.getElementById('playground'); const codeEditor = document.getElementById('codeEditor'); const codeOutput = document.getElementById('codeOutput'); const playgroundFrame = document.getElementById('playgroundFrame');
 let sandboxReady = false;
 let pendingSandboxMessage = null;
@@ -78,6 +78,7 @@ function openLesson(id) {
   document.getElementById('teachConcept').textContent = teaching[id].concept;
   document.getElementById('teachPredict').textContent = teaching[id].predict;
   document.getElementById('teachBuild').textContent = teaching[id].build;
+  document.getElementById('lessonPrediction').value = state.predictions[id] || '';
   document.getElementById('guideWhy').textContent = lessonGuides[id].why;
   document.getElementById('guideExample').textContent = lessonGuides[id].example;
   document.getElementById('guideMistake').textContent = lessonGuides[id].mistake;
@@ -104,6 +105,7 @@ function checkAnswer() {
   const lesson = state.selectedLesson;
   const answer = document.getElementById('taskAnswer').value.trim();
   const feedback = document.getElementById('taskFeedback');
+  if (!document.getElementById('lessonPrediction').value.trim()) { feedback.className = 'task-feedback error'; feedback.textContent = 'Record a prediction before checking your solution. It is part of the lesson, not a test of perfection.'; return false; }
   if (!answer) { feedback.className = 'task-feedback error'; feedback.textContent = 'Write a solution first. A rough attempt is more useful than a blank answer.'; return false; }
   const passed = lesson.checks.every((check) => check.test(answer));
   feedback.className = `task-feedback ${passed ? 'success' : 'error'}`;
@@ -120,6 +122,8 @@ document.querySelector('.primary-button').addEventListener('click', () => openLe
 document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
 document.getElementById('checkAnswer').addEventListener('click', checkAnswer);
 document.getElementById('showHint').addEventListener('click', () => { document.getElementById('taskHint').textContent = state.selectedLesson.hint; });
+document.getElementById('lessonPrediction').addEventListener('input', (event) => { state.predictions[state.selectedLesson.id] = event.target.value; localStorage.setItem('code-atlas-predictions', JSON.stringify(state.predictions)); });
+document.getElementById('saveNotes').addEventListener('click', () => { localStorage.setItem('code-atlas-notes', document.getElementById('learnerNotes').value); document.getElementById('notesSaved').textContent = 'Saved just now'; });
 document.getElementById('completeLesson').addEventListener('click', () => { if (!checkAnswer()) return; const isNew = !state.completed.includes(state.selectedLesson.id); if (isNew) { state.completed.push(state.selectedLesson.id); celebrateCompletion(); } saveProgress(); updateProgress(); renderLessons(); openLesson(state.selectedLesson.id); });
 document.querySelector('.close-tip').addEventListener('click', (event) => event.currentTarget.closest('.tip-panel').remove());
 function resetProgress() { state.completed = []; saveProgress(); updateProgress(); renderLessons(); document.getElementById('settingsProgressText').textContent = 'Your progress is stored on this device.'; }
@@ -138,4 +142,5 @@ document.getElementById('phoneMode').addEventListener('click', () => applyDevice
 document.getElementById('windowsMode').addEventListener('click', () => applyDeviceMode('windows'));
 applyTheme(savedTheme);
 applyDeviceMode(savedDevice);
+document.getElementById('learnerNotes').value = localStorage.getItem('code-atlas-notes') || '';
 renderFilters(); renderLessons(); updateProgress();
