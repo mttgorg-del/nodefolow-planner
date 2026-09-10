@@ -20,6 +20,12 @@ const teaching = {
   'javascript-2': { concept: 'Network calls finish later. async/await makes that wait readable, while try/catch gives the user a recovery path when it fails.', predict: 'What should happen if fetch rejects: should the app silently stop or enter catch?', build: 'Write the smallest async function that fetches, parses, and reports failure.' },
   'linux-1': { concept: 'find starts at a path, tests each entry, and can filter by type and name. The shell expands wildcards before a command unless you quote them.', predict: 'Which tool should interpret *.log: the shell or find?', build: 'Compose the command from three pieces: starting path, regular-file test, and quoted name pattern.' },
   'linux-2': { concept: 'A pipe sends one command’s output to the next. -print0 and xargs -0 use NUL separators so spaces and newlines in filenames remain safe.', predict: 'Why is a newline a risky filename separator?', build: 'Build the pipeline left to right. Search only files, preserve filenames, then grep for ERROR.' },
+  'python-3': { concept: 'A function is a named block. Parameters bring data in; return sends a result back out.', predict: 'Which lets another line reuse the greeting: print or return?', build: 'Define the function, call it, and change the argument to prove it is reusable.' },
+  'python-4': { concept: 'Lists hold ordered values. append changes the list; len asks how many values it contains right now.', predict: 'After adding a third task, what should len(tasks) report?', build: 'Change the collection through its method, then measure it instead of guessing.' },
+  'javascript-3': { concept: 'JavaScript functions package behavior. return produces a value; calling the function runs the package.', predict: 'What value should double(4) return before it is logged?', build: 'Write a helper with one parameter, then call it with a different number.' },
+  'javascript-4': { concept: 'Form submission is an event. preventDefault stops the browser’s default navigation while your validation decides what happens next.', predict: 'When should preventDefault run: for every submit or only an invalid one?', build: 'Connect the submit event, check the field, and give the user a useful message.' },
+  'linux-3': { concept: 'Linux permissions separate user, group, and others. chmod u+x adds execute permission only for the file owner.', predict: 'Which audience receives u+x: the owner, the group, or everyone?', build: 'Change one permission deliberately, then run the script with ./ to test it.' },
+  'linux-4': { concept: 'grep searches text; -R walks directories and --include narrows which filenames are searched.', predict: 'Why is restricting the file pattern safer than searching every file?', build: 'Compose a focused recursive search and read the file paths in its output.' },
 };
 const sources = {
   'python-1': 'https://docs.python.org/3/tutorial/introduction.html',
@@ -28,6 +34,12 @@ const sources = {
   'javascript-2': 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Functions',
   'linux-1': 'https://man7.org/linux/man-pages/man1/find.1.html',
   'linux-2': 'https://man7.org/linux/man-pages/man1/find.1.html',
+  'python-3': 'https://docs.python.org/3/tutorial/controlflow.html#defining-functions',
+  'python-4': 'https://docs.python.org/3/tutorial/datastructures.html',
+  'javascript-3': 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Functions',
+  'javascript-4': 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Events#preventing_default_behavior',
+  'linux-3': 'https://man7.org/linux/man-pages/man1/chmod.1.html',
+  'linux-4': 'https://man7.org/linux/man-pages/man1/grep.1.html',
 };
 const state = { filter: 'all', completed: JSON.parse(localStorage.getItem('code-atlas-progress') || '[]'), selectedLesson: null };
 const lessonGrid = document.getElementById('lessonGrid'); const progressBar = document.getElementById('progressBar'); const progressPercent = document.getElementById('progressPercent'); const progressText = document.getElementById('progressText'); const journeyTrack = document.getElementById('journeyTrack'); const dialog = document.getElementById('lessonDialog'); const playground = document.getElementById('playground'); const codeEditor = document.getElementById('codeEditor'); const codeOutput = document.getElementById('codeOutput'); const playgroundFrame = document.getElementById('playgroundFrame');
@@ -60,6 +72,7 @@ function openLesson(id) {
   const sourceLink = document.getElementById('taskSource');
   sourceLink.textContent = lesson.source;
   sourceLink.href = sources[id];
+  document.getElementById('taskObjective').textContent = `By the end, you can ${lesson.description.charAt(0).toLowerCase()}${lesson.description.slice(1)}`;
   document.getElementById('taskTitle').textContent = lesson.task;
   document.getElementById('taskPrompt').textContent = lesson.prompt;
   document.getElementById('taskObstacle').textContent = lesson.obstacle;
@@ -102,5 +115,10 @@ document.getElementById('themeToggle').addEventListener('click', () => applyThem
 document.getElementById('settingsThemeToggle').addEventListener('click', () => applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark'));
 document.querySelectorAll('.nav-link').forEach((button) => { button.addEventListener('click', () => { document.querySelectorAll('.nav-link').forEach((item) => item.classList.toggle('active', item === button)); document.getElementById(button.dataset.target).scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
 function celebrateCompletion() { const burst = document.createElement('div'); burst.className = 'celebration'; burst.innerHTML = '<span>+20 XP</span><i></i><i></i><i></i><i></i><i></i>'; document.body.appendChild(burst); setTimeout(() => burst.remove(), 1100); }
+const savedDevice = localStorage.getItem('code-atlas-device') || 'windows';
+function applyDeviceMode(mode) { const phone = mode === 'phone'; document.body.classList.toggle('phone-mode', phone); document.body.classList.toggle('windows-mode', !phone); document.getElementById('phoneMode').classList.toggle('active', phone); document.getElementById('windowsMode').classList.toggle('active', !phone); localStorage.setItem('code-atlas-device', phone ? 'phone' : 'windows'); }
+document.getElementById('phoneMode').addEventListener('click', () => applyDeviceMode('phone'));
+document.getElementById('windowsMode').addEventListener('click', () => applyDeviceMode('windows'));
 applyTheme(savedTheme);
+applyDeviceMode(savedDevice);
 renderFilters(); renderLessons(); updateProgress();
